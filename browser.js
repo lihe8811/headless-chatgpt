@@ -547,7 +547,22 @@ async function uploadImage(imagePath) {
         
         // Wait for image to be uploaded and visible
         console.log("Waiting for image to complete...");
-        await waitForImageToComplete();
+        const uploadIndicatorSelector = 'circle.origin-[50%_50%] -rotate-90 stroke-gray-400';
+        try {
+            // First check if the upload indicator appears
+            await page.waitForSelector(uploadIndicatorSelector, { timeout: 10000 });
+            console.log("Upload in progress: circular indicator detected");
+            
+            // Then wait for it to disappear, which indicates the upload is complete
+            await page.waitForFunction(
+                (selector) => !document.querySelector(selector),
+                { timeout: 30000 },
+                uploadIndicatorSelector
+            );
+            console.log("Upload circle disappeared: image upload completed");
+        } catch (err) {
+            console.log("Upload indicator not found or disappeared quickly, continuing...");
+        }
         
         console.log("Image upload complete!");
         return true;
